@@ -3,9 +3,7 @@ package com.sciolizer.redlightgreenlight;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.*;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -14,7 +12,6 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
-import org.bukkit.event.vehicle.VehicleEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.plugin.PluginManager;
@@ -22,12 +19,15 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.WeakHashMap;
 
 public class RedLightGreenLight extends JavaPlugin {
 
-    protected WeakHashMap<Entity, Location> entityLocations = new WeakHashMap<Entity, Location>();
+    protected WeakHashMap<Entity, Location> entityLocations = new WeakHashMap<Entity, Location>(); // todo: track fire ticks as well
     protected WeakHashMap<Arrow,ArrowTracker> arrowLocations = new WeakHashMap<Arrow, ArrowTracker>();
+    protected Map<Vehicle,Location> locationsVehiclesMovedFrom = new HashMap<Vehicle, Location>();
     protected boolean atLeastOnePlayerActedLastTick = false;
     protected boolean atLeastOnePlayerActedThisTick = false;
 
@@ -79,17 +79,22 @@ public class RedLightGreenLight extends JavaPlugin {
         pm.registerEvents(new Listener() {
             @EventHandler
             public void onVehicleEnterEvent(VehicleEnterEvent event) {
-                processVehicleEvent(event, event.getEntered());
+                processEntity(event, event.getEntered());
             }
 
             @EventHandler
             public void onVehicleMoveEvent(VehicleMoveEvent event) {
-                processVehicleEvent(event, event.getVehicle().getPassenger());
+                Entity passenger = event.getVehicle().getPassenger();
+                if (passenger != null && passenger instanceof Player) {
+                    atLeastOnePlayerActedThisTick = true;
+                } else {
+                    locationsVehiclesMovedFrom.put(event.getVehicle(), event.getFrom());
+                }
             }
 
             @EventHandler
             public void onVehicleExitEvent(VehicleExitEvent event) {
-                processVehicleEvent(event, event.getExited());
+                processEntity(event, event.getExited());
             }
         }, this);
 
@@ -150,24 +155,31 @@ public class RedLightGreenLight extends JavaPlugin {
                         if (entity instanceof HumanEntity) {
                             continue;
                         }
+
                         if (entity instanceof Arrow) {
                             Arrow arrow = (Arrow) entity;
                             if (!arrowLocations.containsKey(arrow)) {
                                 arrowLocations.put(arrow, new ArrowTracker(arrow));
                             }
                             arrowLocations.get(arrow).update(!atLeastOnePlayerActedLastTick);
+                            continue;
                         }
                         if (atLeastOnePlayerActedLastTick || !entityLocations.containsKey(entity)) {
-                            world.setGameRuleValue("doDaylightCycle", "true");
                             entityLocations.put(entity, entity.getLocation());
                         } else {
-                            world.setGameRuleValue("doDaylightCycle", "false");
                             entity.teleport(entityLocations.get(entity));
                         }
+                    }
+                    world.setGameRuleValue("doDaylightCycle", atLeastOnePlayerActedLastTick ? "true" : "false");
+                }
+                if (!atLeastOnePlayerActedLastTick) {
+                    for (Map.Entry<Vehicle, Location> entry : locationsVehiclesMovedFrom.entrySet()) {
+                        entry.getKey().teleport(entry.getValue());
                     }
                 }
                 atLeastOnePlayerActedLastTick = atLeastOnePlayerActedThisTick;
                 atLeastOnePlayerActedThisTick = false;
+                locationsVehiclesMovedFrom.clear();
             }
         }.runTaskTimer(this, 1, 1);
     }
@@ -305,11 +317,6 @@ public class RedLightGreenLight extends JavaPlugin {
                 Double.doubleToLongBits(l1.getX()) == Double.doubleToLongBits(l2.getX()) &&
                         Double.doubleToLongBits(l1.getY()) == Double.doubleToLongBits(l2.getY()) &&
                         Double.doubleToLongBits(l1.getZ()) == Double.doubleToLongBits(l2.getZ());
-    }
-
-    protected void processVehicleEvent(VehicleEvent event, Entity entity) {
-//        processEntity(event, entity);
-        // vehicle events cannot be cancelled =/  Need to
     }
 
     protected <T extends EntityEvent & Cancellable> void processEntityEvent(T event) {
