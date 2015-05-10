@@ -45,7 +45,7 @@ public class RedLightGreenLight extends JavaPlugin {
                                 previousPlayerLocations.put(player, player.getLocation());
                             } else {
                                 Location newLocation = player.getLocation();
-                                if (!atLeastOnePlayerMoved && !previousLocation.equals(newLocation)) {
+                                if (!atLeastOnePlayerMoved && !samePosition(previousLocation, newLocation)) {
                                     atLeastOnePlayerMoved = true;
                                 }
                                 previousPlayerLocations.put(player, newLocation);
@@ -68,4 +68,11 @@ public class RedLightGreenLight extends JavaPlugin {
             }
         }.runTaskTimer(this, 1, 1);
 	}
+
+    protected boolean samePosition(Location l1, Location l2) {
+        return
+                Double.doubleToLongBits(l1.getX()) == Double.doubleToLongBits(l2.getX()) &&
+                Double.doubleToLongBits(l1.getY()) == Double.doubleToLongBits(l2.getY()) &&
+                Double.doubleToLongBits(l1.getZ()) == Double.doubleToLongBits(l2.getZ());
+    }
 }
