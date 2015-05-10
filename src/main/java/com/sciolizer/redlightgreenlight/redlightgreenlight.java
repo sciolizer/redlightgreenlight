@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -17,6 +18,7 @@ import java.util.WeakHashMap;
 public class RedLightGreenLight extends JavaPlugin {
 
     protected WeakHashMap<Entity, Location> spawnLocations = new WeakHashMap<Entity, Location>();
+    protected WeakHashMap<Player,Location> previousPlayerLocations = new WeakHashMap<Player, Location>();
 
 	public void onDisable() {
 	}
@@ -33,17 +35,33 @@ public class RedLightGreenLight extends JavaPlugin {
         new BukkitRunnable() {
             @Override
             public void run() {
+                boolean atLeastOnePlayerMoved = false;
+                for (World world : Bukkit.getServer().getWorlds()) {
+                    for (Entity entity : world.getEntities()) {
+                        if (entity instanceof Player) {
+                            Player player = (Player) entity;
+                            Location previousLocation = previousPlayerLocations.get(player);
+                            if (previousLocation == null) {
+                                previousPlayerLocations.put(player, player.getLocation());
+                            } else {
+                                Location newLocation = player.getLocation();
+                                if (!atLeastOnePlayerMoved && !previousLocation.equals(newLocation)) {
+                                    atLeastOnePlayerMoved = true;
+                                }
+                                previousPlayerLocations.put(player, newLocation);
+                            }
+                        }
+                    }
+                }
                 for (World world : Bukkit.getServer().getWorlds()) {
                     for (Entity entity : world.getEntities()) {
                         if (entity instanceof HumanEntity) {
                             continue;
                         }
-                        if (!spawnLocations.containsKey(entity)) {
+                        if (atLeastOnePlayerMoved || !spawnLocations.containsKey(entity)) {
                             spawnLocations.put(entity, entity.getLocation());
-                        }
-                        Location location = spawnLocations.get(entity);
-                        if (location != null) { // always true?
-                            entity.teleport(location);
+                        } else {
+                            entity.teleport(spawnLocations.get(entity));
                         }
                     }
                 }
