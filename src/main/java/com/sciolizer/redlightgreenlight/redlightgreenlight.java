@@ -3,6 +3,7 @@ package com.sciolizer.redlightgreenlight;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.Cancellable;
@@ -19,14 +20,47 @@ import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 import java.util.WeakHashMap;
 
 public class RedLightGreenLight extends JavaPlugin {
 
     protected WeakHashMap<Entity, Location> entityLocations = new WeakHashMap<Entity, Location>();
+    protected WeakHashMap<Arrow,ArrowTracker> arrowLocations = new WeakHashMap<Arrow, ArrowTracker>();
     protected boolean atLeastOnePlayerActedLastTick = false;
     protected boolean atLeastOnePlayerActedThisTick = false;
+
+    protected static class ArrowTracker {
+        public static final int ARROW_COUNTDOWN = 1;
+        protected int countdown;
+        protected Location location;
+        protected Vector velocity;
+        protected Arrow arrow;
+
+        public ArrowTracker(Arrow arrow) {
+            this.arrow = arrow;
+            this.location = arrow.getLocation();
+            this.countdown = ARROW_COUNTDOWN;
+            this.velocity = arrow.getVelocity();
+        }
+
+        public void update(boolean frozen) {
+            if (this.countdown > 0) {
+                this.countdown--;
+                frozen = false;
+            }
+            if (frozen) {
+                // todo: ticks lived (also for all items on the ground)
+                // todo: don't let the fire burn out
+                arrow.teleport(location);
+                arrow.setVelocity(velocity);
+            } else {
+                this.location = arrow.getLocation();
+                this.velocity = arrow.getVelocity();
+            }
+        }
+    }
 
     public void onDisable() {
     }
@@ -81,7 +115,17 @@ public class RedLightGreenLight extends JavaPlugin {
             }
 
             @EventHandler
+            public void onEntityExplodeEvent(EntityExplodeEvent event) {
+                processEntityEvent(event);
+            }
+
+            @EventHandler
             public void onEntityInteractEvent(EntityInteractEvent event) {
+                processEntityEvent(event);
+            }
+
+            @EventHandler
+            public void onEntityRegainHealthEvent(EntityRegainHealthEvent event) {
                 processEntityEvent(event);
             }
 
@@ -89,6 +133,11 @@ public class RedLightGreenLight extends JavaPlugin {
             public void onEntityShootBowEvent(EntityShootBowEvent event) {
                 processEntityEvent(event);
             }
+            @EventHandler
+            public void onExplosionPrimeEvent(ExplosionPrimeEvent event) {
+                processEntityEvent(event);
+            }
+
         }, this);
 
         new BukkitRunnable() {
@@ -99,7 +148,14 @@ public class RedLightGreenLight extends JavaPlugin {
                         if (entity instanceof HumanEntity) {
                             continue;
                         }
-                        if (atLeastOnePlayerActedThisTick || !entityLocations.containsKey(entity)) {
+                        if (entity instanceof Arrow) {
+                            Arrow arrow = (Arrow) entity;
+                            if (!arrowLocations.containsKey(arrow)) {
+                                arrowLocations.put(arrow, new ArrowTracker(arrow));
+                            }
+                            arrowLocations.get(arrow).update(!atLeastOnePlayerActedLastTick);
+                        }
+                        if (atLeastOnePlayerActedLastTick || !entityLocations.containsKey(entity)) {
                             entityLocations.put(entity, entity.getLocation());
                         } else {
                             entity.teleport(entityLocations.get(entity));
