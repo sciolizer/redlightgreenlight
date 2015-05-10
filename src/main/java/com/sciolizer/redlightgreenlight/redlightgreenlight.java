@@ -79,17 +79,17 @@ public class RedLightGreenLight extends JavaPlugin {
         pm.registerEvents(new Listener() {
             @EventHandler
             public void onVehicleEnterEvent(VehicleEnterEvent event) {
-                processVehicleEvent(event);
+                processVehicleEvent(event, event.getEntered());
             }
 
             @EventHandler
             public void onVehicleMoveEvent(VehicleMoveEvent event) {
-                processVehicleEvent(event);
+                processVehicleEvent(event, event.getVehicle().getPassenger());
             }
 
             @EventHandler
             public void onVehicleExitEvent(VehicleExitEvent event) {
-                processVehicleEvent(event);
+                processVehicleEvent(event, event.getExited());
             }
         }, this);
 
@@ -307,15 +307,17 @@ public class RedLightGreenLight extends JavaPlugin {
                         Double.doubleToLongBits(l1.getZ()) == Double.doubleToLongBits(l2.getZ());
     }
 
-    protected void processVehicleEvent(VehicleEvent event) {
-        // todo: this one is trickier because we need to cancel vehicle move events associated with
-        // monsters, but not vehicle move events associated with players, and the VehicleMoveEvent
-        // does not contain an entity, so we need to track the entities ourselves
+    protected void processVehicleEvent(VehicleEvent event, Entity entity) {
+//        processEntity(event, entity);
+        // vehicle events cannot be cancelled =/  Need to
     }
 
     protected <T extends EntityEvent & Cancellable> void processEntityEvent(T event) {
-        Entity entity = event.getEntity();
-        if (entity instanceof HumanEntity) {
+        processEntity(event, event.getEntity());
+    }
+
+    protected void processEntity(Cancellable event, Entity entity) {
+        if (entity != null && entity instanceof HumanEntity) {
             setPlayerActed();
         } else if (!atLeastOnePlayerActedLastTick) {
             event.setCancelled(true);
