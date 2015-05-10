@@ -7,6 +7,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
@@ -39,124 +40,7 @@ public class RedLightGreenLight extends JavaPlugin {
             }
         }, this);
 
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerBedEnterEvent(PlayerBedEnterEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerBedLeaveEvent(PlayerBedLeaveEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerBucketEmptyEvent(PlayerBucketEmptyEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerBucketFillEvent(PlayerBucketFillEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerDropItemEvent(PlayerDropItemEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerEditBookEvent(PlayerEditBookEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerEggThrowEvent(PlayerEggThrowEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerFishEvent(PlayerFishEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerInteractEvent(PlayerInteractEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerItemConsumeEvent(PlayerItemConsumeEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerItemHeldEvent(PlayerItemHeldEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerMoveEvent(PlayerMoveEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerPickupItemEvent(PlayerPickupItemEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerPortalEvent(PlayerPortalEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerShearEntityEvent(PlayerShearEntityEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerLeashEntityEvent(PlayerLeashEntityEvent event) {
-                setPlayerActed();
-            }
-        }, this);
-
-        pm.registerEvents(new Listener() {
-            @EventHandler
-            public void onPlayerUnleashEntityEvent(PlayerUnleashEntityEvent event) {
-                setPlayerActed();
-            }
-        }, this);
+        registerPlayerEvents();
 
         pm.registerEvents(new Listener() {
             @EventHandler
@@ -226,6 +110,130 @@ public class RedLightGreenLight extends JavaPlugin {
                 atLeastOnePlayerActedThisTick = false;
             }
         }.runTaskTimer(this, 1, 1);
+    }
+
+    private void registerPlayerEvents() {
+        PluginManager pm = Bukkit.getServer().getPluginManager();
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerMoveEvent(PlayerMoveEvent event) {
+                if (!samePosition(event.getFrom(), event.getTo())) {
+                    setPlayerActed();
+                }
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerBedEnterEvent(PlayerBedEnterEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerBedLeaveEvent(PlayerBedLeaveEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerBucketEmptyEvent(PlayerBucketEmptyEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerBucketFillEvent(PlayerBucketFillEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerDropItemEvent(PlayerDropItemEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerEditBookEvent(PlayerEditBookEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerEggThrowEvent(PlayerEggThrowEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerFishEvent(PlayerFishEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerInteractEvent(PlayerInteractEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerItemConsumeEvent(PlayerItemConsumeEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerItemHeldEvent(PlayerItemHeldEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerPickupItemEvent(PlayerPickupItemEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerPortalEvent(PlayerPortalEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerShearEntityEvent(PlayerShearEntityEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerLeashEntityEvent(PlayerLeashEntityEvent event) {
+                setPlayerActed();
+            }
+        }, this);
+
+        pm.registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR)
+            public void onPlayerUnleashEntityEvent(PlayerUnleashEntityEvent event) {
+                setPlayerActed();
+            }
+        }, this);
     }
 
     protected void setPlayerActed() {
