@@ -126,7 +126,9 @@ public class RedLightGreenLight extends JavaPlugin {
 
             @EventHandler
             public void onEntityRegainHealthEvent(EntityRegainHealthEvent event) {
-                processEntityEvent(event);
+                if (!atLeastOnePlayerActedLastTick) {
+                    event.setCancelled(true);
+                }
             }
 
             @EventHandler
@@ -156,8 +158,10 @@ public class RedLightGreenLight extends JavaPlugin {
                             arrowLocations.get(arrow).update(!atLeastOnePlayerActedLastTick);
                         }
                         if (atLeastOnePlayerActedLastTick || !entityLocations.containsKey(entity)) {
+                            world.setGameRuleValue("doDaylightCycle", "true");
                             entityLocations.put(entity, entity.getLocation());
                         } else {
+                            world.setGameRuleValue("doDaylightCycle", "false");
                             entity.teleport(entityLocations.get(entity));
                         }
                     }
